@@ -1,2 +1,2 @@
-# koa-auth
-Authentication &amp; Authorization with Node.js, Koa, MongoDB
+# koa-oauth
+OAuth 2.0 with Node.js, Koa, MongoDB

@@ -1,0 +1,10 @@
+<h1>Main page</h1>
+<div>
+  <% if (user) { %>
+    <b>Account:</b> user.email <br />
+    <a href="/signOut">Sign Out</a>
+  <% } else { %>
+    <b>No account</b> <br />
+    <a href="/signIn">Sign In</a>
+  <% } %>
+</div>
