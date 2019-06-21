@@ -1,10 +1,18 @@
 <h1>Main page</h1>
 <div>
   <% if (user) { %>
-    <b>Account:</b> user.email <br />
+    <b>Account:</b> #<%= user._id %><br />
+    <b>User session:</b> #<%= userSession._id %><br />
+    <ul>
+    	<li><a href="<%= urls.vk %>"><%= user.auth.vk ? 'Disable' : 'Enable' %> <b>VK</b></a></li>
+		<li><a href="<%= urls.facebook %>"><%= user.auth.facebook ? 'Disable' : 'Enable' %> <b>Facebook</b></a></li>
+		<li><a href="<%= urls.google %>"><%= user.auth.google ? 'Disable' : 'Enable' %> <b>Google</b></a></li>
+    </ul>
+    <br />
     <a href="/signOut">Sign Out</a>
   <% } else { %>
-    <b>No account</b> <br />
+    <b>No account</b> 
+    <br /><br />
     <a href="/signIn">Sign In</a>
   <% } %>
 </div>

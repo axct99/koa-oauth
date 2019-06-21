@@ -7,8 +7,7 @@ const bodyparser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const mongoose = require('mongoose');
 
-const index = require('./routes/index');
-const users = require('./routes/users');
+const UserSession = require('./models/userSession');
 
 // error handler
 onerror(app);
@@ -22,7 +21,8 @@ app.use(logger());
 app.use(require('koa-static')(__dirname + '/public'));
 
 app.use(views(__dirname + '/views', {
-  extension: 'ejs'
+  extension: 'ejs',
+  options: {}
 }));
 
 // DB
@@ -41,9 +41,24 @@ app.use(async (ctx, next) => {
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
 });
 
+// authonification by session token
+app.use(async (ctx, next) => {
+  // get token from cookies
+  const token = ctx.cookies.get('userSessionToken');
+  
+  // find session by token
+  const userSession = await UserSession.findOne({ 
+    token: token
+  }).populate('user').exec();
+
+  ctx.state.userSession = ctx.userSession = userSession;
+  if (userSession && userSession.user) ctx.state.user = ctx.user = userSession.user;
+
+  await next();
+});
+
 // routes
-app.use(index.routes(), index.allowedMethods());
-app.use(users.routes(), users.allowedMethods());
+app.use(require('./routes/index').routes());
 
 // error-handling
 app.on('error', (err, ctx) => {

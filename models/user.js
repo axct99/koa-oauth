@@ -4,9 +4,40 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
 	email: {
 		type: String,
-		required: true,
 		lowercase: true,
 		maxlength: 250
+	},
+	auth: {
+		type: {
+			vk: {
+				accessToken: {
+					type: String,
+					maxlength: 500
+				},
+				userId: {
+					type: Number
+				}
+			},
+			facebook: {
+				accessToken: {
+					type: String,
+					maxlength: 500
+				},
+				userId: {
+					type: Number
+				}
+			},
+			google: {
+				accessToken: {
+					type: String,
+					maxlength: 500
+				},
+				userId: {
+					type: Number
+				}
+			}
+		},
+		default: {}
 	}
 }, {
 	timestamps: true
