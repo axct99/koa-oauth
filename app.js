@@ -13,31 +13,35 @@ const UserSession = require('./models/userSession');
 onerror(app);
 
 // middlewares
-app.use(bodyparser({
-  enableTypes:['json', 'form', 'text']
-}));
+app.use(
+  bodyparser({
+    enableTypes: ['json', 'form', 'text']
+  })
+);
 app.use(json());
 app.use(logger());
 app.use(require('koa-static')(__dirname + '/public'));
 
-app.use(views(__dirname + '/views', {
-  extension: 'ejs',
-  options: {}
-}));
+app.use(
+  views(__dirname + '/views', {
+    extension: 'ejs',
+    options: {}
+  })
+);
 
 // DB
 if (process.env.NODE_ENV === 'development') mongoose.set('debug', true);
 mongoose.connection
-	.on('error', error => console.error(e))
-	.on('close', () => console.log('Database connection closed.'))
-	.once('open', () => console.log('Database connection opened.'))
-mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true })
+  .on('error', error => console.error(e))
+  .on('close', () => console.log('Database connection closed.'))
+  .once('open', () => console.log('Database connection opened.'));
+mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true });
 
 // logger
 app.use(async (ctx, next) => {
   const start = new Date();
   await next();
-  const ms = new Date() - start
+  const ms = new Date() - start;
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
 });
 
@@ -45,14 +49,17 @@ app.use(async (ctx, next) => {
 app.use(async (ctx, next) => {
   // get token from cookies
   const token = ctx.cookies.get('userSessionToken');
-  
+
   // find session by token
-  const userSession = await UserSession.findOne({ 
+  const userSession = await UserSession.findOne({
     token: token
-  }).populate('user').exec();
+  })
+    .populate('user')
+    .exec();
 
   ctx.state.userSession = ctx.userSession = userSession;
-  if (userSession && userSession.user) ctx.state.user = ctx.user = userSession.user;
+  if (userSession && userSession.user)
+    ctx.state.user = ctx.user = userSession.user;
 
   await next();
 });
@@ -65,4 +72,4 @@ app.on('error', (err, ctx) => {
   console.error('server error', err, ctx);
 });
 
-module.exports = app
+module.exports = app;
