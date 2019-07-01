@@ -1,2 +1,2 @@
 # koa-oauth
-OAuth 2.0 with Node.js, Koa, MongoDB
+OAuth 2.0 without Passport.js (Node.js, Koa, MongoDB). 

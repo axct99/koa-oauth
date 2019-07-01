@@ -29,7 +29,7 @@ app.use(
   })
 );
 
-// DB
+// db
 if (process.env.NODE_ENV === 'development') mongoose.set('debug', true);
 mongoose.connection
   .on('error', error => console.error(e))
