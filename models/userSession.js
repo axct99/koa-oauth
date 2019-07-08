@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const randtoken = require('rand-token');
+const mongoose = require('mongoose')
+const randtoken = require('rand-token')
 
 // User's session
 const UserSessionSchema = new mongoose.Schema(
@@ -21,17 +21,17 @@ const UserSessionSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: () => {
-        return randtoken.generate(64);
+        return randtoken.generate(64)
       }
     }
   },
   {
     timestamps: true
   }
-);
+)
 
 module.exports = mongoose.model(
   'UserSession',
   UserSessionSchema,
   'userSessions'
-);
+)

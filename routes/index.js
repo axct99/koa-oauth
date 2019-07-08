@@ -1,91 +1,99 @@
-const router = require('koa-router')();
-const axios = require('axios');
+const router = require('koa-router')()
+const axios = require('axios')
+const env = require('fine-env')
 
-const User = require('../models/user');
-const UserSession = require('../models/userSession');
+const User = require('../models/user')
+const UserSession = require('../models/userSession')
 
 // main page
 router.get('/', async (ctx, next) => {
-  const host = `${ctx.request.protocol}://${ctx.request.get('host')}`;
+  const host = `${ctx.request.protocol}://${ctx.request.get('host')}`
+
+  // social login
+  const googleUrl =
+    'https://accounts.google.com/o/oauth2/v2/auth' +
+    `?client_id=${env.google.client.id}` +
+    `&redirect_uri=${host}/signIn/google` +
+    `&response_type=code&scope=email`
+  const vkUrl =
+    `https://oauth.vk.com/authorize` +
+    `?client_id=${env.vk.client.id}` +
+    `&redirect_uri=${host}/signIn/vk` +
+    `&display=page&scope=email&v=${env.vk.api.version}`
+  const facebookUrl = ''
 
   await ctx.render('index', {
     user: null,
     urls: ctx.user
       ? {
-          google: !ctx.user.auth.google
-            ? 'https://accounts.google.com/o/oauth2/v2/auth' + 
-              `?client_id=${process.env.GOOGLE_CLIENT_ID}` + 
-              `&redirect_uri=${host}/signIn/google` + 
-              `&response_type=code&scope=email`
-            : '/signOut/google',
-          vk: !ctx.user.auth.vk
-            ? `https://oauth.vk.com/authorize` +
-              `?client_id=${process.env.VK_CLIENT_ID}` +
-              `&redirect_uri=${host}/signIn/vk` +
-              `&display=page&scope=email&v=${process.env.VK_API_VERSION}`
-            : '/signOut/vk',
-          facebook: !ctx.user.auth.facebook
-            ? '' : '/signOut/facebook/',
-        }
+        google: !ctx.user.auth.google ? googleUrl : '/signOut/google',
+        vk: !ctx.user.auth.vk ? vkUrl : '/signOut/vk',
+        facebook: !ctx.user.auth.facebook ? facebookUrl : '/signOut/facebook/'
+      }
       : null
-  });
+  })
 
-  next();
-});
+  next()
+})
 
 // sign in
 router.get('/signIn', async (ctx, next) => {
-  const host = `${ctx.request.protocol}://${ctx.request.get('host')}`;
+  const host = `${ctx.request.protocol}://${ctx.request.get('host')}`
+
+  // social login
+  const googleUrl =
+    'https://accounts.google.com/o/oauth2/v2/auth' +
+    `?client_id=${env.google.client.id}` +
+    `&redirect_uri=${host}/signIn/google` +
+    `&response_type=code&scope=email`
+  const vkUrl =
+    `https://oauth.vk.com/authorize` +
+    `?client_id=${env.vk.client.id}` +
+    `&redirect_uri=${host}/signIn/vk` +
+    `&display=page&scope=email&v=${env.vk.api.version}`
+  const facebookUrl = ''
 
   await ctx.render('signIn', {
     urls: {
-      google: 
-        'https://accounts.google.com/o/oauth2/v2/auth' + 
-        `?client_id=${process.env.GOOGLE_CLIENT_ID}` + 
-        `&redirect_uri=${host}/signIn/google` + 
-        `&response_type=code&scope=email`,
-      vk:
-        'https://oauth.vk.com/authorize' +
-        `?client_id=${process.env.VK_CLIENT_ID}` +
-        `&redirect_uri=${host}/signIn/vk` +
-        `&display=page&scope=email&v=${process.env.VK_API_VERSION}`,
-      facebook: '...'
+      google: googleUrl,
+      vk: vkUrl,
+      facebook: facebookUrl
     }
-  });
-});
+  })
+})
 
 // get access token by code (redirect_uri)
 router.get('/signIn/:type', async (ctx, next) => {
-  const host = `${ctx.request.protocol}://${ctx.request.get('host')}`;
-  const { type } = ctx.params;
-  const { code } = ctx.query;
+  const host = `${ctx.request.protocol}://${ctx.request.get('host')}`
+  const { type } = ctx.params
+  const { code } = ctx.query
 
-  if (!code) return (ctx.status = 400);
+  if (!code) return (ctx.status = 400)
 
   if (type == 'google') {
     const res = await axios.post(
       `https://www.googleapis.com/oauth2/v4/token` +
-        `?client_id=${process.env.GOOGLE_CLIENT_ID}` +
-        `&client_secret=${process.env.GOOGLE_CLIENT_SECRET}` + 
-        `&redirect_uri=${host}/signIn/google` + 
-        `&code=${code}` +
-        '&grant_type=authorization_code',
-    );
+      `?client_id=${env.google.client.id}` +
+      `&client_secret=${env.google.client.secret}` +
+      `&redirect_uri=${host}/signIn/google` +
+      `&code=${code}` +
+      '&grant_type=authorization_code'
+    )
 
-    const { access_token, id_token } = res.data;
+    const { access_token, id_token } = res.data
 
-    const res2 = await axios.post(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`);
+    const res2 = await axios.post(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`)
 
-    const { sub } = res2.data;
+    const { sub } = res2.data
 
-    if (!(access_token && sub)) return ctx.redirect('/');
+    if (!(access_token && sub)) return ctx.redirect('/')
     else {
       // find user by user id
       let user = ctx.user
         ? ctx.user
         : await User.findOne({
-            'auth.vk.userId': sub
-          }).exec();
+          'auth.vk.userId': sub
+        }).exec()
 
       if (!user) {
         // if user doesn't exist create it
@@ -96,15 +104,15 @@ router.get('/signIn/:type', async (ctx, next) => {
               userId: sub
             }
           }
-        }).save();
+        }).save()
 
         // add user's session
         userSession = await new UserSession({
           user: user._id
-        }).save();
+        }).save()
 
         // set cookies
-        ctx.cookies.set('userSessionToken', userSession.token);
+        ctx.cookies.set('userSessionToken', userSession.token)
       } else {
         // update user
         await User.findOneAndUpdate(
@@ -117,28 +125,28 @@ router.get('/signIn/:type', async (ctx, next) => {
               userId: sub
             }
           }
-        ).exec();
+        ).exec()
       };
     };
   } else if (type == 'vk') {
     const res = await axios.get(
       `https://oauth.vk.com/access_token` +
-        `?client_id=${process.env.VK_CLIENT_ID}` +
-        `&client_secret=${process.env.VK_CLIENT_SECRET}` +
-        `&redirect_uri=${host}/signIn/vk` +
-        `&code=${code}`
-    );
+      `?client_id=${env.vk.client.id}` +
+      `&client_secret=${env.vk.client.secret}` +
+      `&redirect_uri=${host}/signIn/vk` +
+      `&code=${code}`
+    )
 
-    const { access_token, expires_in, user_id, email } = res.data;
+    const { access_token, expires_in, user_id, email } = res.data
 
-    if (!(access_token && user_id)) return ctx.redirect('/');
+    if (!(access_token && user_id)) return ctx.redirect('/')
     else {
       // find user by user id
       let user = ctx.user
         ? ctx.user
         : await User.findOne({
-            'auth.vk.userId': user_id
-          }).exec();
+          'auth.vk.userId': user_id
+        }).exec()
 
       if (!user) {
         // if user doesn't exist create it
@@ -149,15 +157,15 @@ router.get('/signIn/:type', async (ctx, next) => {
               userId: user_id
             }
           }
-        }).save();
+        }).save()
 
         // add user's session
         userSession = await new UserSession({
           user: user._id
-        }).save();
+        }).save()
 
         // set cookies
-        ctx.cookies.set('userSessionToken', userSession.token);
+        ctx.cookies.set('userSessionToken', userSession.token)
       } else if (ctx.user) {
         // update user
         await User.findOneAndUpdate(
@@ -170,28 +178,30 @@ router.get('/signIn/:type', async (ctx, next) => {
               userId: user_id
             }
           }
-        ).exec();
+        ).exec()
       }
     }
+  } else if (type == 'facebook') {
+
   };
-  
-  return ctx.redirect('/');
-});
+
+  return ctx.redirect('/')
+})
 
 // sign out
 router.get('/signOut', async (ctx, next) => {
   // clear cookie
-  ctx.cookies.set('userSessionToken', '');
+  ctx.cookies.set('userSessionToken', '')
 
   // delete session
-  if (ctx.userSession) await ctx.userSession.remove();
+  if (ctx.userSession) await ctx.userSession.remove()
 
-  ctx.redirect('/');
-});
+  ctx.redirect('/')
+})
 
 // sign out from service
 router.get('/signOut/:type', async (ctx, next) => {
-  const { type } = ctx.params;
+  const { type } = ctx.params
 
   if (type == 'google') {
     // update google
@@ -202,7 +212,7 @@ router.get('/signOut/:type', async (ctx, next) => {
       {
         'auth.google': null
       }
-    ).exec();
+    ).exec()
   } else if (type == 'vk') {
     // update user
     await User.findOneAndUpdate(
@@ -212,10 +222,10 @@ router.get('/signOut/:type', async (ctx, next) => {
       {
         'auth.vk': null
       }
-    ).exec();
+    ).exec()
   }
 
-  ctx.redirect('/');
-});
+  ctx.redirect('/')
+})
 
-module.exports = router;
+module.exports = router

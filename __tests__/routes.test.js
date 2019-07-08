@@ -1,5 +1,5 @@
-const request = require('supertest');
-const server = require('../bin/www');
+const request = require('supertest')
+const server = require('../bin/www')
 
 // describe('basic route tests', () => {
 //   test('GET /', async () => {
