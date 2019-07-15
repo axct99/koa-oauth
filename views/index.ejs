@@ -2,17 +2,48 @@
 <div>
 	<% if (user) { %>
 		<b>Account:</b> #<%= user._id %><br />
-		<b>User session:</b> #<%= userSession._id %><br />
+		<p><%= user.authToken %></p><br />
+
+		<% if (urls) { %>
 		<ul>
-			<li><a href="<%= urls.google %>"><%= user.auth.google ? 'Disable' : 'Enable' %> <b>Google</b></a></li>
-			<li><a href="<%= urls.vk %>"><%= user.auth.vk ? 'Disable' : 'Enable' %> <b>VK</b></a></li>
-			<li><a href="<%= urls.facebook %>"><%= user.auth.facebook ? 'Disable' : 'Enable' %> <b>Facebook</b></a></li>
+			<li>
+				<% if (user.auth.google) { %> 
+					<b>Google #<%= user.auth.google.userId %></b> | <a href="/unlink/google">Unlink</a><br />
+				<% } else { %>
+					<a href="<%= urls.google %>">Link <b>Google</b></a>
+				<% } %>
+			</li>
+			<li>
+				<% if (user.auth.vk) { %>
+					<b>VK #<%= user.auth.vk.userId %></b> | <a href="/unlink/vk">Unlink</a><br />
+				<% } else { %>
+					<a href="<%= urls.vk %>">Link <b>VK</b></a>
+				<% } %>
+			</li>
+			<li>
+				<% if (user.auth.facebook) { %>
+					<b>VK #<%= user.auth.facebook.userId %></b> | <a href="/unlink/facebook">Unlink</a><br />
+				<% } else { %>
+					<a href="<%= urls.facebook %>">Link <b>Facebook</b></a>
+				<% } %>
+			</li>
 		</ul>
 		<br />
+		<% } %>
+
 		<a href="/signOut">Sign Out</a>
 	<% } else { %>
 		<b>No account</b> 
 		<br /><br />
-		<a href="/signIn">Sign In</a>
+		
+		<% if (urls) { %>
+		<ul>
+			<li><a href="<%= urls.google %>">Sign In with <b>Google</b></a></li>
+			<li><a href="<%= urls.vk %>">Sign In with <b>VK</b></a></a></li>
+			<li><a href="<%= urls.facebook %>">Sign In with <b>Facebook</b></a></li>
+		</ul>
+		<br />
+		<% } %>
 	<% } %>
+
 </div>

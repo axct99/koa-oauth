@@ -6,8 +6,9 @@ const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
 
-const UserSession = require('./models/userSession')
+const User = require('./models/user')
 
 // error handler
 onerror(app)
@@ -47,24 +48,26 @@ app.use(async (ctx, next) => {
 
 // authonification by session token
 app.use(async (ctx, next) => {
-  // get token from cookies
-  const token = ctx.cookies.get('userSessionToken')
+  // get access token from cookies
+  const accessToken = ctx.cookies.get('accessToken')
 
-  // find session by token
-  const userSession = await UserSession.findOne({
-    token: token
-  })
-    .populate('user')
-    .exec()
-
-  ctx.state.userSession = ctx.userSession = userSession
-  if (userSession && userSession.user) { ctx.state.user = ctx.user = userSession.user }
+  if (accessToken) {
+    // verify JWT
+    try {
+      var { token } = jwt.verify(accessToken, process.env.JWT_SECRET)
+      // find user by access token
+      if (token) ctx.state.user = ctx.user = await User.findOne({ authToken: token }).exec()
+    } catch (err) {
+      ctx.cookies.set('accessToken', '')
+      return await ctx.redirect('/')
+    }
+  }
 
   await next()
 })
 
 // routes
-app.use(require('./routes/index').routes())
+app.use(require('./routes/').routes())
 
 // error-handling
 app.on('error', (err, ctx) => {

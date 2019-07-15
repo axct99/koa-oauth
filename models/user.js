@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const randtoken = require('rand-token')
 
 // User
 const UserSchema = new mongoose.Schema(
@@ -7,6 +8,13 @@ const UserSchema = new mongoose.Schema(
       type: String,
       lowercase: true,
       maxlength: 250
+    },
+    authToken: {
+      type: String,
+      required: true,
+      default: () => {
+        return randtoken.generate(64)
+      }
     },
     auth: {
       type: {
@@ -45,5 +53,9 @@ const UserSchema = new mongoose.Schema(
     timestamps: true
   }
 )
+
+UserSchema.virtual('authCount').get(function () {
+  return Object.values(this.auth)
+})
 
 module.exports = mongoose.model('User', UserSchema, 'users')
